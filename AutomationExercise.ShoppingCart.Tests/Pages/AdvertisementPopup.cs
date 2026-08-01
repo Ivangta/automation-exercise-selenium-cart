@@ -5,38 +5,49 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 {
     public class AdvertisementPopup : BasePage
     {
-        private readonly By[] closeButtonLocators =
-                {
-            By.Id("dismiss-button"),
-            By.Id("dismiss-button-element"),
-            By.CssSelector("[aria-label='Close ad']"),
-            By.CssSelector("[aria-label='Close']"),
-            By.CssSelector(".close-button")
-        };
+        private static readonly By CloseButtonLocator = By.CssSelector(
+             "#dismiss-button, " +
+             "#dismiss-button-element, " +
+             "[aria-label='Close ad'], " +
+             "[aria-label='Close']");
 
         public AdvertisementPopup(IWebDriver driver)
             : base(driver)
         {
         }
 
-        public void CloseIfDisplayed()
+        public bool CloseIfDisplayed()
         {
             driver.SwitchTo().DefaultContent();
 
-            WebDriverWait shortWait =
-                new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-
-            shortWait.PollingInterval =
-                TimeSpan.FromMilliseconds(250);
-
-            shortWait.IgnoreExceptionTypes(
-                typeof(NoSuchElementException),
-                typeof(StaleElementReferenceException),
-                typeof(NoSuchFrameException));
-
             try
             {
-                shortWait.Until(currentDriver =>
+                // Google vignette рекламата в този сайт добавя
+                // "google_vignette" към URL адреса.
+                bool advertisementExpected = driver.Url.Contains(
+                    "google_vignette",
+                    StringComparison.OrdinalIgnoreCase);
+
+                // Няма индикация за реклама — не чакаме изобщо.
+                if (!advertisementExpected)
+                {
+                    return false;
+                }
+
+                WebDriverWait advertisementWait =
+                    new WebDriverWait(
+                        driver,
+                        TimeSpan.FromSeconds(3));
+
+                advertisementWait.PollingInterval =
+                    TimeSpan.FromMilliseconds(200);
+
+                advertisementWait.IgnoreExceptionTypes(
+                    typeof(NoSuchElementException),
+                    typeof(StaleElementReferenceException),
+                    typeof(NoSuchFrameException));
+
+                return advertisementWait.Until(currentDriver =>
                 {
                     currentDriver.SwitchTo().DefaultContent();
 
@@ -47,7 +58,8 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
             }
             catch (WebDriverTimeoutException)
             {
-                // The advertisement is optional.
+                // Рекламата е опционална.
+                return false;
             }
             finally
             {
@@ -64,22 +76,30 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
                 return true;
             }
 
-            const int maximumFrameDepth = 5;
+            // Две iframe нива са достатъчни за Google vignette.
+            const int maximumFrameDepth = 2;
 
             if (currentDepth >= maximumFrameDepth)
             {
                 return false;
             }
 
-            List<IWebElement> frames = currentDriver
-                .FindElements(By.TagName("iframe"))
-                .ToList();
+            IReadOnlyCollection<IWebElement> frames =
+                currentDriver.FindElements(By.TagName("iframe"));
 
             foreach (IWebElement frame in frames)
             {
+                bool switchedToFrame = false;
+
                 try
                 {
+                    if (!frame.Displayed)
+                    {
+                        continue;
+                    }
+
                     currentDriver.SwitchTo().Frame(frame);
+                    switchedToFrame = true;
 
                     bool wasClosed =
                         TryCloseInCurrentContextAndFrames(
@@ -93,21 +113,26 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
                 }
                 catch (StaleElementReferenceException)
                 {
-                    // The advertisement refreshed while being inspected.
+                    // Рекламният iframe може да бъде презареден.
                 }
                 catch (NoSuchFrameException)
                 {
-                    // The iframe disappeared before Selenium entered it.
+                    // iframe-ът може да изчезне преди превключването.
                 }
                 finally
                 {
-                    try
+                    // ParentFrame се извиква само ако действително
+                    // сме влезли във frame-а.
+                    if (switchedToFrame)
                     {
-                        currentDriver.SwitchTo().ParentFrame();
-                    }
-                    catch (WebDriverException)
-                    {
-                        currentDriver.SwitchTo().DefaultContent();
+                        try
+                        {
+                            currentDriver.SwitchTo().ParentFrame();
+                        }
+                        catch (WebDriverException)
+                        {
+                            currentDriver.SwitchTo().DefaultContent();
+                        }
                     }
                 }
             }
@@ -118,73 +143,55 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
         private bool TryClickCloseButton(
             IWebDriver currentDriver)
         {
-            foreach (By locator in closeButtonLocators)
-            {
-                IReadOnlyCollection<IWebElement> elements =
-                    currentDriver.FindElements(locator);
+            IReadOnlyCollection<IWebElement> closeButtons =
+                currentDriver.FindElements(CloseButtonLocator);
 
-                foreach (IWebElement element in elements)
+            foreach (IWebElement closeButton in closeButtons)
+            {
+                try
                 {
+                    if (!closeButton.Displayed ||
+                        !closeButton.Enabled)
+                    {
+                        continue;
+                    }
+
                     try
                     {
-                        if (!element.Displayed)
-                        {
-                            continue;
-                        }
-
-                        ScrollElementIntoView(
-                            currentDriver,
-                            element);
-
-                        try
-                        {
-                            element.Click();
-                        }
-                        catch (ElementClickInterceptedException)
-                        {
-                            ClickWithJavaScript(
-                                currentDriver,
-                                element);
-                        }
-                        catch (ElementNotInteractableException)
-                        {
-                            ClickWithJavaScript(
-                                currentDriver,
-                                element);
-                        }
-
-                        return true;
+                        closeButton.Click();
                     }
-                    catch (StaleElementReferenceException)
+                    catch (ElementClickInterceptedException)
                     {
-                        // The close element was replaced.
+                        ClickWithJavaScript(
+                            currentDriver,
+                            closeButton);
                     }
+                    catch (ElementNotInteractableException)
+                    {
+                        ClickWithJavaScript(
+                            currentDriver,
+                            closeButton);
+                    }
+
+                    return true;
+                }
+                catch (StaleElementReferenceException)
+                {
+                    // Бутонът може да бъде заменен при зареждането.
                 }
             }
 
             return false;
         }
 
-        private static void ScrollElementIntoView(
-            IWebDriver currentDriver,
-            IWebElement element)
-        {
-            IJavaScriptExecutor js =
-                (IJavaScriptExecutor)currentDriver;
-
-            js.ExecuteScript(
-                "arguments[0].scrollIntoView({block: 'center'});",
-                element);
-        }
-
         private static void ClickWithJavaScript(
             IWebDriver currentDriver,
             IWebElement element)
         {
-            IJavaScriptExecutor js =
+            IJavaScriptExecutor javaScript =
                 (IJavaScriptExecutor)currentDriver;
 
-            js.ExecuteScript(
+            javaScript.ExecuteScript(
                 "arguments[0].click();",
                 element);
         }

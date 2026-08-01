@@ -12,7 +12,15 @@ namespace AutomationExercise.ShoppingCart.Tests.Base
             options.AddArgument("--start-maximized");
             options.AddArgument("--disable-notifications");
 
-            return new ChromeDriver(options);
+            options.PageLoadStrategy = PageLoadStrategy.Eager;
+
+            IWebDriver driver = new ChromeDriver(options);
+
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
+
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(20);
+
+            return driver;
         }
     }
 }
