@@ -58,6 +58,30 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
             })!;
         }
 
+        protected void WaitUntilInvisible(By locator)
+        {
+            wait.Until(currentDriver =>
+            {
+                IReadOnlyCollection<IWebElement> elements = currentDriver.FindElements(locator);
+
+                if (elements.Count == 0)
+                {
+                    return true;
+                }
+
+                foreach (IWebElement element in elements)
+                {
+                    if (element.Displayed)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            });  
+
+        }
+
         protected void ScrollToElement(By locator)
         {
             IWebElement element = WaitUntilVisible(locator);
