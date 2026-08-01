@@ -1,6 +1,7 @@
 ﻿using AutomationExercise.ShoppingCart.Tests.Base;
 using AutomationExercise.ShoppingCart.Tests.Models;
 using AutomationExercise.ShoppingCart.Tests.Pages;
+using System.Text.RegularExpressions;
 
 namespace AutomationExercise.ShoppingCart.Tests.Tests
 {
@@ -10,20 +11,37 @@ namespace AutomationExercise.ShoppingCart.Tests.Tests
         public void User_Should_Add_Two_Mens_Jeans_And_Verify_Cart()
         {
             //Arrange
-            HomePage homepage = new HomePage(driver!);
+            HomePage homePage = new HomePage(driver!);
+            CookieBanner cookieBanner = new CookieBanner(driver!);
+            AdvertisementPopup advertisementPopup = new AdvertisementPopup(driver!);
             ProductsPage productsPage = new ProductsPage(driver!);
             CartPage cartPage = new CartPage(driver!);
 
-            const string firstProductName = "Soft Streatch Jeans";
+            const string firstProductName = "Soft Stretch Jeans";
             const string secondProductName = "Regular Fit Straight Jeans";
 
             //Act
-            homepage.Open();
-            homepage.GoToProducts();
+            homePage.Open();
+            cookieBanner.AcceptConsentIfDisplayed();
 
-            productsPage.SelectMensJeansCategory();
+            homePage.GoToProducts();
+            advertisementPopup.CloseIfDisplayed();
 
-            Assert.That(productsPage.GetCategoryTitle(), Is.EqualTo("Men - Jeans Products"),
+            productsPage.ExpandMenCategory();
+            advertisementPopup.CloseIfDisplayed();
+
+            productsPage.ScrollToJeansSubcategory();
+            advertisementPopup.CloseIfDisplayed();
+
+            productsPage.ClickJeansSubcategory();
+            advertisementPopup.CloseIfDisplayed();
+
+            string actualCategoryTitle = Regex.Replace(productsPage.GetCategoryTitle(),
+                @"\s+",
+                " ")
+                .Trim();
+
+            Assert.That(actualCategoryTitle, Is.EqualTo("Men - Jeans Products").IgnoreCase,
                 "The Men - Jeans category was not opened.");
 
             productsPage.AddProductToCart(firstProductName);
@@ -41,7 +59,7 @@ namespace AutomationExercise.ShoppingCart.Tests.Tests
                 (new[]  { firstProductName, secondProductName }),
                 "The cart does not contain the expected products!");
 
-            CartItem firstProduct = cartItems.Single(item => item.Name == secondProductName);
+            CartItem firstProduct = cartItems.Single(item => item.Name == firstProductName);
 
             CartItem secondProduct = cartItems.Single(item => item.Name == secondProductName);
 
@@ -52,9 +70,7 @@ namespace AutomationExercise.ShoppingCart.Tests.Tests
                 Assert.That(firstProduct.Total,Is.EqualTo("Rs. 799"), "The first product total is incorrect.");
 
                 Assert.That(secondProduct.Price, Is.EqualTo("Rs. 1200"), "The second product price is incorrect.");
-
                 Assert.That(secondProduct.Quantity, Is.EqualTo(1),"The second product quantity is incorrect.");
-
                 Assert.That(secondProduct.Total, Is.EqualTo("Rs. 1200"), "The second product total is incorrect.");
             });
         }

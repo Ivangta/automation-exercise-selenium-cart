@@ -20,21 +20,21 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 
         protected IWebElement WaitUntilVisible(By locator)
         {
-            return wait.Until(driver =>
+            return wait.Until(currentDriver =>
             {
-                IWebElement element = driver.FindElement(locator);
+                IReadOnlyCollection<IWebElement> elements = currentDriver.FindElements(locator);
 
-                return element.Displayed ? element : null;
+                return elements.FirstOrDefault(element => element.Displayed);
             })!;
         }
 
         protected IWebElement WaitUntilClickable(By locator)
         {
-            return wait.Until(driver =>
+            return wait.Until(currentDriver =>
             {
-                IWebElement element = driver.FindElement(locator);
+                IReadOnlyCollection<IWebElement> elements = currentDriver.FindElements(locator);
 
-                return element.Displayed && element.Enabled ? element : null;
+                return elements.FirstOrDefault(element => element.Displayed && element.Enabled);
             })!;
         }
 

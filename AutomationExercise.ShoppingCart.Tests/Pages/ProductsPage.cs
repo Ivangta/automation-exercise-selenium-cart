@@ -4,33 +4,37 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 {
     public class ProductsPage : BasePage
     {
-        private readonly By menCategory =
-            By.CssSelector("a[href='#Men']");
+        private readonly By menCategory = By.CssSelector("#accordian a[href='#Men']");
 
-        private readonly By jeansSubcategory =
-            By.CssSelector("a[href='/category_products/6']");
+        private readonly By jeansSubcategory = By.CssSelector("#Men a[href='/category_products/6']");
 
-        private readonly By categoryTitle =
-            By.CssSelector("h2.title.text-center");
+        private readonly By categoryTitle = By.CssSelector("h2.title.text-center");
 
-        private readonly By cartModal =
-            By.Id("cartModal");
+        private readonly By cartModal = By.Id("cartModal");
 
-        private readonly By continueShoppingButton =
-            By.CssSelector("button.close-modal");
+        private readonly By continueShoppingButton = By.CssSelector("button.close-modal");
 
-        private readonly By viewCartLink =
-            By.CssSelector("#cartModal a[href='/view_cart']");
+        private readonly By viewCartLink = By.CssSelector("#cartModal a[href='/view_cart']");
 
         public ProductsPage(IWebDriver driver)
             : base(driver)
         {
         }
 
-        public void SelectMensJeansCategory()
+        public void ExpandMenCategory()
         {
             ScrollToElement(menCategory);
             Click(menCategory);
+        }
+
+        public void ScrollToJeansSubcategory()
+        {
+            WaitUntilVisible(jeansSubcategory);
+            ScrollToElement(jeansSubcategory);
+        }
+
+        public void ClickJeansSubcategory()
+        {
             Click(jeansSubcategory);
         }
 
