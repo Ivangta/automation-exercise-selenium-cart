@@ -82,5 +82,6 @@ Advertisement handling is isolated in a dedicated AdvertisementPopup page object
 Product verification does not depend on the order in which products appear in the cart.
 
 ## Known Limitations
-The tested website contains dynamically displayed third-party advertisements.
-Advertisement timing and HTML structure are controlled by an external provider and may change without notice.
+- The tested website displays dynamically timed third-party Google vignette advertisements.
+- These advertisements may appear between test actions and temporarily block page interaction.
+- Their timing and HTML structure are controlled externally and may change without notice.
