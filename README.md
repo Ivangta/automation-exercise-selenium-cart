@@ -28,18 +28,23 @@ The test:
 ## Project Structure
 
 ```text
+AutomationExercise.ShoppingCart.Tests
+│
 ├── Base
-│   ├── BasePage.cs
 │   ├── BaseTest.cs
 │   └── DriverFactory.cs
+│
 ├── Models
 │   └── CartItem.cs
+│
 ├── Pages
 │   ├── AdvertisementPopup.cs
+│   ├── BasePage.cs
 │   ├── CartPage.cs
 │   ├── CookieBanner.cs
 │   ├── HomePage.cs
 │   └── ProductsPage.cs
+│
 └── Tests
     └── ShoppingCartTests.cs
 ```
