@@ -1,2 +1,69 @@
-# automation-exercise-selenium-cart
-C# Selenium UI automation project for testing the shopping cart functionality of Automation Exercise.
+# Automation Exercise Shopping Cart Test
+
+Automated end-to-end UI test for  
+[Automation Exercise](https://www.automationexercise.com/).
+
+The project uses C#, Selenium WebDriver, NUnit, and the Page Object Model design pattern.
+
+## Test Scenario
+
+The test:
+
+1. Opens the website.
+2. Accepts the cookie consent form when displayed.
+3. Navigates to Products → Men → Jeans.
+4. Adds two products to the cart.
+5. Verifies the category title.
+6. Verifies the product names, prices, quantities, and totals.
+
+## Technologies
+
+- C#
+- .NET
+- Selenium WebDriver
+- NUnit
+- Page Object Model
+- Chrome and Firefox
+
+## Project Structure
+
+```text
+├── Base
+│   ├── BasePage.cs
+│   ├── BaseTest.cs
+│   └── DriverFactory.cs
+├── Models
+│   └── CartItem.cs
+├── Pages
+│   ├── AdvertisementPopup.cs
+│   ├── CartPage.cs
+│   ├── CookieBanner.cs
+│   ├── HomePage.cs
+│   └── ProductsPage.cs
+└── Tests
+    └── ShoppingCartTests.cs
+```
+
+## Running the Test
+
+Restore the packages and run the test:
+
+```bash
+dotnet restore
+dotnet test
+```
+
+The test can also be executed from Visual Studio Test Explorer.
+
+## Browser Validation
+
+The test was successfully validated through more than 20 consecutive executions in:
+
+- Google Chrome
+- Mozilla Firefox
+
+## Notes
+
+- Explicit waits are used instead of `Thread.Sleep`.
+- Cookie consent and Google vignette advertisements are handled when displayed.
+- Browser configuration is located in `DriverFactory.cs`.
