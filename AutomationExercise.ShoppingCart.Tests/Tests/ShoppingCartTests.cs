@@ -25,7 +25,6 @@ namespace AutomationExercise.ShoppingCart.Tests.Tests
             cookieBanner.AcceptConsentIfDisplayed();
 
             homePage.GoToProducts();
-            cookieBanner.AcceptConsentIfDisplayed();
             advertisementPopup.CloseIfDisplayed();
 
             productsPage.ExpandMenCategory();
