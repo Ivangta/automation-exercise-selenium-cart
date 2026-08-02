@@ -23,7 +23,8 @@ The test:
 - Selenium WebDriver
 - NUnit
 - Page Object Model
-- Chrome and Firefox
+- Google Chrome
+- Mozilla Firefox
 
 ## Project Structure
 
@@ -62,7 +63,7 @@ The test can also be executed from Visual Studio Test Explorer.
 
 ## Browser Validation
 
-The test was successfully validated through more than 20 consecutive executions in:
+The test was validated with more than 20 consecutive successful runs in:
 
 - Google Chrome
 - Mozilla Firefox
