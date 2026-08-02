@@ -8,7 +8,7 @@ namespace AutomationExercise.ShoppingCart.Tests.Tests
     public class ShoppingCartTests : BaseTest
     {
         [Test]
-        public void User_Should_Add_Two_Mens_Jeans_And_Verify_Cart()
+        public void User_Should_Add_Two_Mens_Jeans_And_Verify_Cart_Positive()
         {
             //Arrange
             HomePage homePage = new HomePage(driver!);

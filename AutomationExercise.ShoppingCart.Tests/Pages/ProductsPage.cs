@@ -25,7 +25,7 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
         public void ExpandMenCategory()
         {
             ScrollToElement(menCategory);
-            Click(menCategory);
+            ClickWithAdvertisementRetry(menCategory);
         }
 
         public void ScrollToJeansSubcategory()
@@ -36,22 +36,7 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 
         public void ClickJeansSubcategory()
         {
-            try
-            {
-                Click(jeansSubcategory);
-            }
-            catch (ElementClickInterceptedException)
-            {
-                bool advertisementClosed = new AdvertisementPopup(driver)
-                    .CloseIfDisplayed(waitForAdvertisement: true);
-
-                if (!advertisementClosed)
-                {
-                    throw;
-                }
-
-                Click(jeansSubcategory);
-            }
+            ClickWithAdvertisementRetry(jeansSubcategory);
         }
 
         public string GetCategoryTitle()
@@ -105,6 +90,27 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
         public void ViewCart()
         {
             Click(viewCartLink);
+        }
+
+        private void ClickWithAdvertisementRetry(By locator)
+        {
+            try
+            {
+                Click(locator);
+            }
+            catch (ElementClickInterceptedException)
+            {
+                bool advertisementClosed = new AdvertisementPopup(driver)
+                    .CloseIfDisplayed(waitForAdvertisement: true);
+
+                if (!advertisementClosed)
+                {
+                    throw;
+                }
+
+                ScrollToElement(locator);
+                Click(locator);
+            }
         }
     }
 }
