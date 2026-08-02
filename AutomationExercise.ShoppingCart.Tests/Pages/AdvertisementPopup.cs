@@ -5,11 +5,13 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 {
     public class AdvertisementPopup : BasePage
     {
-        private static readonly By CloseButtonLocator = By.CssSelector(
-             "#dismiss-button, " +
-             "#dismiss-button-element, " +
-             "[aria-label='Close ad'], " +
-             "[aria-label='Close']");
+        private static readonly By vignetteFrames = By.CssSelector(
+           "iframe[name^='aswift_'], iframe[id^='aswift_']");
+
+        private static readonly By closeButton = By.CssSelector(
+            "#dismiss-button[aria-label='Close ad'], " +
+            "#dismiss-button-element, " +
+            "#dismiss-button svg path");
 
         public AdvertisementPopup(IWebDriver driver)
             : base(driver)
@@ -20,45 +22,38 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
         {
             driver.SwitchTo().DefaultContent();
 
+            if (!driver.Url.Contains("google_vignette", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(5))
+            {
+                PollingInterval = TimeSpan.FromMilliseconds(200)
+            };
+
+            wait.IgnoreExceptionTypes(
+                typeof(NoSuchElementException),
+                typeof(StaleElementReferenceException),
+                typeof(NoSuchFrameException));
+
             try
             {
-                // Google vignette рекламата в този сайт добавя
-                // "google_vignette" към URL адреса.
-                bool advertisementExpected = driver.Url.Contains(
-                    "google_vignette",
-                    StringComparison.OrdinalIgnoreCase);
+                bool wasClicked = wait.Until(currentDriver =>
+                    TryCloseVignette(currentDriver));
 
-                // Няма индикация за реклама — не чакаме изобщо.
-                if (!advertisementExpected)
+                if (!wasClicked)
                 {
                     return false;
                 }
 
-                WebDriverWait advertisementWait =
-                    new WebDriverWait(
-                        driver,
-                        TimeSpan.FromSeconds(3));
+                wait.Until(currentDriver =>
+                    !IsVignetteStillDisplayed(currentDriver));
 
-                advertisementWait.PollingInterval =
-                    TimeSpan.FromMilliseconds(200);
-
-                advertisementWait.IgnoreExceptionTypes(
-                    typeof(NoSuchElementException),
-                    typeof(StaleElementReferenceException),
-                    typeof(NoSuchFrameException));
-
-                return advertisementWait.Until(currentDriver =>
-                {
-                    currentDriver.SwitchTo().DefaultContent();
-
-                    return TryCloseInCurrentContextAndFrames(
-                        currentDriver,
-                        currentDepth: 0);
-                });
+                return true;
             }
             catch (WebDriverTimeoutException)
             {
-                // Рекламата е опционална.
                 return false;
             }
             finally
@@ -67,117 +62,94 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
             }
         }
 
-        private bool TryCloseInCurrentContextAndFrames(
-            IWebDriver currentDriver,
-            int currentDepth)
+        private bool TryCloseVignette(IWebDriver currentDriver)
         {
-            if (TryClickCloseButton(currentDriver))
-            {
-                return true;
-            }
-
-            // Две iframe нива са достатъчни за Google vignette.
-            const int maximumFrameDepth = 2;
-
-            if (currentDepth >= maximumFrameDepth)
-            {
-                return false;
-            }
+            currentDriver.SwitchTo().DefaultContent();
 
             IReadOnlyCollection<IWebElement> frames =
-                currentDriver.FindElements(By.TagName("iframe"));
+                currentDriver.FindElements(vignetteFrames);
 
             foreach (IWebElement frame in frames)
             {
-                bool switchedToFrame = false;
-
                 try
                 {
-                    if (!frame.Displayed)
-                    {
-                        continue;
-                    }
-
                     currentDriver.SwitchTo().Frame(frame);
-                    switchedToFrame = true;
 
-                    bool wasClosed =
-                        TryCloseInCurrentContextAndFrames(
-                            currentDriver,
-                            currentDepth + 1);
+                    IWebElement? button = currentDriver
+                        .FindElements(closeButton)
+                        .FirstOrDefault(element =>
+                            element.Displayed && element.Enabled);
 
-                    if (wasClosed)
-                    {
-                        return true;
-                    }
-                }
-                catch (StaleElementReferenceException)
-                {
-                    // Рекламният iframe може да бъде презареден.
-                }
-                catch (NoSuchFrameException)
-                {
-                    // iframe-ът може да изчезне преди превключването.
-                }
-                finally
-                {
-                    // ParentFrame се извиква само ако действително
-                    // сме влезли във frame-а.
-                    if (switchedToFrame)
-                    {
-                        try
-                        {
-                            currentDriver.SwitchTo().ParentFrame();
-                        }
-                        catch (WebDriverException)
-                        {
-                            currentDriver.SwitchTo().DefaultContent();
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private bool TryClickCloseButton(
-            IWebDriver currentDriver)
-        {
-            IReadOnlyCollection<IWebElement> closeButtons =
-                currentDriver.FindElements(CloseButtonLocator);
-
-            foreach (IWebElement closeButton in closeButtons)
-            {
-                try
-                {
-                    if (!closeButton.Displayed ||
-                        !closeButton.Enabled)
+                    if (button == null)
                     {
                         continue;
                     }
 
                     try
                     {
-                        closeButton.Click();
+                        button.Click();
                     }
                     catch (ElementClickInterceptedException)
                     {
-                        ClickWithJavaScript(
-                            currentDriver,
-                            closeButton);
+                        ClickWithJavaScript(currentDriver, button);
                     }
                     catch (ElementNotInteractableException)
                     {
-                        ClickWithJavaScript(
-                            currentDriver,
-                            closeButton);
+                        ClickWithJavaScript(currentDriver, button);
                     }
 
                     return true;
                 }
                 catch (StaleElementReferenceException)
                 {
-                    // Бутонът може да бъде заменен при зареждането.
+                    // The advertisement iframe was refreshed.
+                }
+                catch (NoSuchFrameException)
+                {
+                    // The advertisement iframe disappeared.
+                }
+                finally
+                {
+                    currentDriver.SwitchTo().DefaultContent();
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsVignetteStillDisplayed(IWebDriver currentDriver)
+        {
+            currentDriver.SwitchTo().DefaultContent();
+
+            IReadOnlyCollection<IWebElement> frames =
+                currentDriver.FindElements(vignetteFrames);
+
+            foreach (IWebElement frame in frames)
+            {
+                try
+                {
+                    currentDriver.SwitchTo().Frame(frame);
+
+                    bool closeButtonIsVisible = currentDriver
+                        .FindElements(closeButton)
+                        .Any(element => element.Displayed);
+
+                    if (closeButtonIsVisible)
+                    {
+                        return true;
+                    }
+                }
+                catch (StaleElementReferenceException)
+                {
+                    // The iframe was removed while checking it.
+                }
+                catch (NoSuchFrameException)
+                {
+                    // The iframe no longer exists.
+                }
+                finally
+                {
+                    currentDriver.SwitchTo().DefaultContent();
                 }
             }
 
@@ -188,12 +160,8 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
             IWebDriver currentDriver,
             IWebElement element)
         {
-            IJavaScriptExecutor javaScript =
-                (IJavaScriptExecutor)currentDriver;
-
-            javaScript.ExecuteScript(
-                "arguments[0].click();",
-                element);
+            ((IJavaScriptExecutor)currentDriver)
+                .ExecuteScript("arguments[0].click();", element);
         }
     }
 }

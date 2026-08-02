@@ -41,8 +41,16 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
                 Click(jeansSubcategory);
             }
             catch (ElementClickInterceptedException)
+                when (driver.Url.Contains(
+                    "google_vignette", StringComparison.OrdinalIgnoreCase))
             {
-                new AdvertisementPopup(driver).CloseIfDisplayed();
+                bool advertisementClosed = new AdvertisementPopup(driver).CloseIfDisplayed();
+
+                if (!advertisementClosed)
+                {
+                    throw;
+                }
+
                 Click(jeansSubcategory);
             }
         }
