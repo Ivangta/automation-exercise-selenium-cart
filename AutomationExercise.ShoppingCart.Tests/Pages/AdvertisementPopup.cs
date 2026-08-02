@@ -18,7 +18,7 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
         {
         }
 
-        public bool CloseIfDisplayed()
+        public bool CloseIfDisplayed(bool waitForAdvertisement = false)
         {
             driver.SwitchTo().DefaultContent();
 
