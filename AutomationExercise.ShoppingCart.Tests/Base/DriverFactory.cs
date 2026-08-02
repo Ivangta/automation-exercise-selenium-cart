@@ -5,11 +5,19 @@ namespace AutomationExercise.ShoppingCart.Tests.Base
 {
     public static class DriverFactory
     {
-        public static IWebDriver CreateDriver()
+        public static IWebDriver CreateDriver(bool runHeadless = false)
         {
             ChromeOptions options = new ChromeOptions();
 
-            options.AddArgument("--start-maximized");
+            if (runHeadless)
+            {
+                options.AddArgument("--headless=new");
+                options.AddArgument("--window-size=1920,1080");
+            }
+            else
+            {
+                options.AddArgument("--start-maximized");
+            }
             options.AddArgument("--disable-notifications");
 
             options.PageLoadStrategy = PageLoadStrategy.Eager;

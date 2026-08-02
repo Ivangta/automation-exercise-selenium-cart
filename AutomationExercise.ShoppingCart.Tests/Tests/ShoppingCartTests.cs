@@ -67,10 +67,10 @@ namespace AutomationExercise.ShoppingCart.Tests.Tests
             {
                 Assert.That(firstProduct.Price, Is.EqualTo("Rs. 799"), "The first product price is incorrect!");
                 Assert.That(firstProduct.Quantity, Is.EqualTo(1), "The first product quantity is incorrect!");
-                Assert.That(firstProduct.Total,Is.EqualTo("Rs. 799"), "The first product total is incorrect.");
+                Assert.That(firstProduct.Total, Is.EqualTo("Rs. 799"), "The first product total is incorrect.");
 
                 Assert.That(secondProduct.Price, Is.EqualTo("Rs. 1200"), "The second product price is incorrect.");
-                Assert.That(secondProduct.Quantity, Is.EqualTo(1),"The second product quantity is incorrect.");
+                Assert.That(secondProduct.Quantity, Is.EqualTo(1), "The second product quantity is incorrect.");
                 Assert.That(secondProduct.Total, Is.EqualTo("Rs. 1200"), "The second product total is incorrect.");
             });
         }

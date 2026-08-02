@@ -1,4 +1,5 @@
 ﻿using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 
 namespace AutomationExercise.ShoppingCart.Tests.Pages
 {
@@ -35,7 +36,15 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 
         public void ClickJeansSubcategory()
         {
-            Click(jeansSubcategory);
+            try
+            {
+                Click(jeansSubcategory);
+            }
+            catch (ElementClickInterceptedException)
+            {
+                new AdvertisementPopup(driver).CloseIfDisplayed();
+                Click(jeansSubcategory);
+            }
         }
 
         public string GetCategoryTitle()
@@ -45,14 +54,39 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
 
         public void AddProductToCart(string productName)
         {
+            By productCard = By.XPath(
+                $"//div[contains(@class,'product-image-wrapper')]" +
+                $"[.//div[contains(@class,'productinfo')]//p[normalize-space()='{productName}']]");
+
             By addToCartButton = By.XPath(
                 $"//div[contains(@class,'product-image-wrapper')]" +
                 $"[.//div[contains(@class,'productinfo')]//p[normalize-space()='{productName}']]" +
-                $"//div[contains(@class,'productinfo')]" +
-                $"//a[contains(@class,'add-to-cart')]");
+                $"//div[contains(@class,'product-overlay')]//a[contains(@class,'add-to-cart')]");
 
-            ScrollToElement(addToCartButton);
-            Click(addToCartButton);
+            IWebElement product = WaitUntilVisible(productCard);
+
+            ((IJavaScriptExecutor)driver).ExecuteScript(
+                "arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});",
+                product);
+
+            new Actions(driver).MoveToElement(product).Perform();
+
+            IWebElement button = WaitUntilClickable(addToCartButton);
+
+            try
+            {
+                button.Click();
+            }
+            catch (ElementClickInterceptedException)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", button);
+            }
+            catch (ElementNotInteractableException)
+            {
+                ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].click();", button);
+            }
+
+            WaitUntilVisible(cartModal);
         }
 
         public void ContinueShopping()
