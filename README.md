@@ -73,3 +73,14 @@ The test was validated with more than 20 consecutive successful runs in:
 - Explicit waits are used instead of `Thread.Sleep`.
 - Cookie consent and Google vignette advertisements are handled when displayed.
 - Browser configuration is located in `DriverFactory.cs`.
+
+## Stability Considerations
+Explicit waits are used instead of fixed delays such as Thread.Sleep.
+Cookie consent is accepted only when the consent form is displayed.
+Google vignette advertisements are detected and closed when they interrupt the test flow.
+Advertisement handling is isolated in a dedicated AdvertisementPopup page object.
+Product verification does not depend on the order in which products appear in the cart.
+
+## Known Limitations
+The tested website contains dynamically displayed third-party advertisements.
+Advertisement timing and HTML structure are controlled by an external provider and may change without notice.
