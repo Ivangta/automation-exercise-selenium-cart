@@ -22,7 +22,11 @@ namespace AutomationExercise.ShoppingCart.Tests.Pages
         {
             driver.SwitchTo().DefaultContent();
 
-            if (!driver.Url.Contains("google_vignette", StringComparison.OrdinalIgnoreCase))
+            bool advertisementExpected =
+                waitForAdvertisement ||
+                driver.Url.Contains("google_vignette", StringComparison.OrdinalIgnoreCase);
+
+            if (!advertisementExpected)
             {
                 return false;
             }
